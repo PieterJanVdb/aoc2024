@@ -2,11 +2,11 @@ module Day1 (part1, part2) where
 
 import Data.List (sort)
 import Debug.Trace (trace)
-import Utils.Lists (alternate, occurrences)
+import Utils.Lists (occurrences)
 import Utils.String (toInt)
 
 lists :: [String] -> ([Int], [Int])
-lists = alternate . concatMap (map toInt . take 2 . words)
+lists = unzip . map ((\x -> (head x, last x)) . map toInt . words)
 
 distances :: ([Int], [Int]) -> [(Int, Int)]
 distances (l, r) = zip (sort l) (sort r)
