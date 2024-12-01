@@ -12,6 +12,9 @@ common warnings
 library
     exposed-modules:
         Day1
+    other-Modules:
+        Utils.String
+        Utils.Lists
     hs-source-dirs: src
     build-depends:  base ^>=4.18.2.1
     default-language: Haskell2010
