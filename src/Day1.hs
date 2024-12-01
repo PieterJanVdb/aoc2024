@@ -1,7 +1,6 @@
 module Day1 (part1, part2) where
 
 import Data.List (sort)
-import Debug.Trace (trace)
 import Utils.Lists (occurrences)
 import Utils.String (toInt)
 
