@@ -1,6 +1,7 @@
 module Main where
 
 import Day1
+import Day2
 import System.Environment
 
 main :: IO ()
@@ -17,6 +18,8 @@ run = do
   let day = (read (args !! 0) :: Int)
   let part = (read (args !! 1) :: Int)
   case (day, part) of
-    (1, 1) -> return (return (Day1.part1 $ lines input))
-    (1, 2) -> return (return (Day1.part2 $ lines input))
+    (1, 1) -> return (Right (Day1.part1 $ lines input))
+    (1, 2) -> return (Right (Day1.part2 $ lines input))
+    (2, 1) -> return (Right (Day2.part1 $ lines input))
+    (2, 2) -> return (Right (Day2.part2 $ lines input))
     _ -> return (Left "Not yet implemented")

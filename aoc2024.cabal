@@ -6,24 +6,33 @@ build-type:         Simple
 
 extra-doc-files:    CHANGELOG.md
 
+common extensions
+    default-extensions:
+        LambdaCase
+        NoFieldSelectors
+        OverloadedRecordDot
+        OverloadedRecordUpdate
+        OverloadedStrings
 common warnings
     ghc-options: -Wall
 
 library
+    import: extensions
     exposed-modules:
         Day1
+        Day2
     other-Modules:
         Utils.String
         Utils.Lists
     hs-source-dirs: src
     build-depends:  base ^>=4.18.2.1
-    default-language: Haskell2010
+    default-language: GHC2021
 
 executable aoc2024
-    import:           warnings
+    import:           warnings, extensions
     main-is:          Main.hs
     build-depends:
         aoc2024,
         base ^>=4.18.2.1
     hs-source-dirs:   app
-    default-language: Haskell2010
+    default-language: GHC2021
