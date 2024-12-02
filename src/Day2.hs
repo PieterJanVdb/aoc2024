@@ -1,15 +1,12 @@
 module Day2 (part1, part2) where
 
+import Data.List (inits, tails)
 import Utils.String (toInt)
 
 data Direction = Increasing | Decreasing
 
-variations' :: [Int] -> [Int] -> [[Int]]
-variations' _ [] = []
-variations' prev (x : xs) = (reverse prev ++ xs) : variations' (x : prev) xs
-
 variations :: [Int] -> [[Int]]
-variations = variations' []
+variations xs = zipWith (++) (inits xs) (tail (tails xs))
 
 safe' :: Maybe Direction -> [Int] -> Bool
 safe' _ [] = True
