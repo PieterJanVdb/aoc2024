@@ -4,16 +4,12 @@ import Utils.String (toInt)
 
 data Direction = Increasing | Decreasing
 
+variations' :: [Int] -> [Int] -> [[Int]]
+variations' _ [] = []
+variations' prev (x : xs) = (reverse prev ++ xs) : variations' (x : prev) xs
+
 variations :: [Int] -> [[Int]]
-variations = variations' ([], [])
-
-variations' :: ([Int], [[Int]]) -> [Int] -> [[Int]]
-variations' (_, acc) [] = acc
-variations' (prev, vars) [x] = variations' (prev ++ [x], prev : vars) []
-variations' (prev, vars) (x : xs) = variations' (prev ++ [x], (prev ++ xs) : vars) xs
-
-safe :: [Int] -> Bool
-safe = safe' Nothing
+variations = variations' []
 
 safe' :: Maybe Direction -> [Int] -> Bool
 safe' _ [] = True
@@ -26,6 +22,9 @@ safe' dir (x : y : xs)
       Just Increasing -> False
       _ -> safe' (Just Decreasing) (y : xs)
   | otherwise = False
+
+safe :: [Int] -> Bool
+safe = safe' Nothing
 
 levels :: [String] -> [[Int]]
 levels = fmap (fmap toInt . words)
