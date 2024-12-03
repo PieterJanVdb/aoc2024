@@ -39,10 +39,8 @@ run2 instructions = fst $ foldr op (0, False) instructions
   where
     op Enable (acc, ignore) = (acc, False)
     op Disable (acc, ignore) = (acc, True)
-    op (Multiply x y) (acc, ignore) =
-      if ignore
-        then (acc, ignore)
-        else (acc + (x * y), ignore)
+    op (Multiply x y) (acc, True) = (acc, True)
+    op (Multiply x y) (acc, False) = (acc + (x * y), False)
 
 solve :: ([Instruction] -> Int) -> String -> Int
 solve run input = run instructions
