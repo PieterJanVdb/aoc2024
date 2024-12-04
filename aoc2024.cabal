@@ -22,12 +22,15 @@ library
         Day1
         Day2
         Day3
+        Day4
     other-Modules:
         Utils.String
         Utils.Lists
+        Utils.Grid
     hs-source-dirs: src
     build-depends:
         base ^>=4.18.2.1,
+        containers,
         text,
         parsec
     default-language: GHC2021
