@@ -2,7 +2,7 @@ module Day4 (part1, part2) where
 
 import Data.Map.Strict qualified as Map
 import Data.Maybe (fromMaybe)
-import Utils.Grid (Coord, Grid, makeGrid)
+import Utils.Grid (Coord, Grid, makeGrid1)
 
 data Direction = N | NE | E | SE | S | SW | W | NW deriving (Show, Enum)
 
@@ -45,13 +45,13 @@ counts :: (Grid Char -> Coord -> Char -> Int) -> Grid Char -> Int
 counts step grid = sum $ Map.mapWithKey (step grid) grid
 
 part1 :: [String] -> String
-part1 = show . counts step . makeGrid
+part1 = show . counts step . makeGrid1
   where
     step grid coord char = case char of
       'X' -> length $ filter id $ map (word grid coord 'M') (enumFrom N)
       _ -> 0
 
 part2 :: [String] -> String
-part2 = show . counts step . makeGrid
+part2 = show . counts step . makeGrid1
   where
     step grid coord char = if (char == 'A') && cross grid coord then 1 else 0

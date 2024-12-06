@@ -24,7 +24,8 @@ library
         Day3
         Day4
         Day5
-    other-Modules:
+        Day6
+    other-modules:
         Utils.String
         Utils.Lists
         Utils.Grid
