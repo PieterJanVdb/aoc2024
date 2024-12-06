@@ -11,10 +11,7 @@ data Direction = N | E | S | W deriving (Eq, Ord, Show)
 
 type Lab = Grid Field
 
-data Path
-  = Finite (Set Coord)
-  | Infinite (Set Coord)
-  deriving (Ord, Eq, Show)
+data Path = Finite (Set Coord) | Infinite deriving (Ord, Eq, Show)
 
 parse :: [String] -> Lab
 parse = makeGrid parseField
@@ -30,7 +27,7 @@ walk :: Lab -> Coord -> Path
 walk lab guard = walk' lab guard N Set.empty
   where
     walk' :: Lab -> Coord -> Direction -> Set (Coord, Direction) -> Path
-    walk' lab coord dir path | Set.member (coord, dir) path = Infinite (Set.map fst path)
+    walk' lab coord dir path | Set.member (coord, dir) path = Infinite
     walk' lab coord dir path =
       case next of
         Just (nextCoord, nextDir) -> walk' lab nextCoord nextDir (Set.insert (coord, dir) path)
@@ -67,4 +64,4 @@ part2 input = show $ length infinite
     guard = findGuard lab
     try = Set.delete guard (solve1 lab)
     attempted = Set.map (\x -> walk (Map.update (\_ -> Just Obstruction) x lab) guard) try
-    infinite = [p | p@(Infinite _) <- Set.toList attempted]
+    infinite = [p | p@Infinite <- Set.toList attempted]
