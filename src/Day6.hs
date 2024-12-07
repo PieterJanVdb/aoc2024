@@ -58,10 +58,10 @@ part1 :: [String] -> String
 part1 = show . length . solve1 . parse
 
 part2 :: [String] -> String
-part2 input = show $ length infinite
+part2 input = show (length infinite)
   where
     lab = parse input
     guard = findGuard lab
-    obstructions = Set.delete guard (solve1 lab)
-    attempted = Set.map (\x -> walk (Map.update (\_ -> Just Obstruction) x lab) guard) obstructions
-    infinite = [p | p@Infinite <- Set.toList attempted]
+    obstructions = Set.toList $ Set.delete guard (solve1 lab)
+    attempted = map (\x -> walk (Map.update (\_ -> Just Obstruction) x lab) guard) obstructions
+    infinite = [p | p@Infinite <- attempted]
