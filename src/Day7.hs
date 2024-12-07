@@ -1,15 +1,14 @@
 module Day7 (part1, part2) where
 
-import Data.Text qualified as T
-import Utils.String (textToInt)
+import Utils.String (toInt)
 
 type Equation = (Int, [Int])
 
 parse :: String -> Equation
-parse line = (textToInt result, nrs)
+parse line = (toInt result, nrs)
   where
-    (result, rest) = T.breakOn ":" (T.pack line)
-    nrs = map textToInt (drop 1 (T.words rest))
+    (result, rest) = break (== ':') line
+    nrs = map toInt (drop 1 (words rest))
 
 isPossible :: [Int -> Int -> Int] -> Equation -> Bool
 isPossible operators (res, nrs) = Just res `elem` collect res nrs
