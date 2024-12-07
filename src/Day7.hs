@@ -13,7 +13,7 @@ parse line = (textToInt result, nrs)
     nrs = map textToInt (drop 1 (T.words rest))
 
 isPossible :: [Int -> Int -> Int] -> Equation -> Bool
-isPossible operators (res, nrs) = Just res `Set.member` Set.fromList (collect res nrs)
+isPossible operators (res, nrs) = Just res `elem` collect res nrs
   where
     collect :: Int -> [Int] -> [Maybe Int]
     collect res [x] = [Just x]
