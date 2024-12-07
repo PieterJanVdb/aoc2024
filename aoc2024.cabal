@@ -25,6 +25,7 @@ library
         Day4
         Day5
         Day6
+        Day7
     other-modules:
         Utils.String
         Utils.Lists
@@ -34,7 +35,9 @@ library
         base,
         containers,
         text,
-        parsec
+        parsec,
+        binary,
+        bytestring
     default-language: GHC2021
 
 executable aoc2024
