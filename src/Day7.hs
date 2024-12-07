@@ -1,7 +1,7 @@
 module Day7 (part1, part2) where
 
 import Data.Text qualified as T
-import Utils.String (textToInt, toInt)
+import Utils.String (textToInt)
 
 type Equation = (Int, [Int])
 
