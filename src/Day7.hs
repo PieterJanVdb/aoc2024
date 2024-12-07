@@ -28,8 +28,13 @@ solve input operators = show result
     possible = filter (isPossible operators) equations
     result = foldr (\x acc -> fst x + acc) 0 possible
 
+concatenate :: Int -> Int -> Int
+concatenate x y = x * pow 10 y + y
+  where
+    pow p a = if a >= p then pow (p * 10) a else p
+
 part1 :: [String] -> String
 part1 input = solve input [(+), (*)]
 
 part2 :: [String] -> String
-part2 input = solve input [(+), (*), \x y -> read (show x <> show y)]
+part2 input = solve input [(+), (*), concatenate]
