@@ -1,6 +1,5 @@
 module Day7 (part1, part2) where
 
-import Data.Set qualified as Set
 import Data.Text qualified as T
 import Utils.String (textToInt, toInt)
 
