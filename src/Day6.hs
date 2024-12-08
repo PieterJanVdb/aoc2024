@@ -3,7 +3,7 @@ module Day6 (part1, part2) where
 import Data.Map.Strict qualified as Map
 import Data.Set (Set)
 import Data.Set qualified as Set
-import Utils.Grid (Coord, Grid, makeGrid)
+import Utils.Grid (Coord, Grid, makeGridWith)
 
 data Field = Guard | Obstruction | Empty deriving (Eq, Show)
 
@@ -14,7 +14,7 @@ type Lab = Grid Field
 data Path = Finite (Set Coord) | Infinite deriving (Ord, Eq, Show)
 
 parse :: [String] -> Lab
-parse = makeGrid parseField
+parse = makeGridWith parseField
   where
     parseField '.' = Empty
     parseField '#' = Obstruction
