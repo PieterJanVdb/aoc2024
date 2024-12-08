@@ -7,7 +7,7 @@ import Utils.Grid (Coord, Grid, invertGridWithFilter, makeGrid)
 import Utils.Lists (pairs)
 
 projectAntenna :: (Coord, Coord) -> Coord
-projectAntenna (p1@(r1, c1), p2@(r2, c2)) = next
+projectAntenna ((r1, c1), (r2, c2)) = next
   where
     dr = abs (r1 - r2)
     dc = abs (c1 - c2)
