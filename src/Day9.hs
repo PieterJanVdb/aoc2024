@@ -9,21 +9,23 @@ import Utils.Lists (splitWhen)
 
 type Disk = Vector (Maybe Int)
 
+data Move = Single | Whole
+
 parse :: String -> Disk
 parse = V.concat . V.toList . V.imap toBlocks . V.fromList . filter (/= '\n')
   where
     toBlocks i c = V.replicate (digitToInt c) (if even i then Just (i `div` 2) else Nothing)
 
-tryMove :: Bool -> Disk -> Vector (Int, Maybe Int) -> Disk
-tryMove shoulDefrag disk used = case viable of
+tryMove :: Move -> Disk -> Vector (Int, Maybe Int) -> Disk
+tryMove moveKind disk used = case viable of
   Nothing -> disk
   Just empty -> V.update disk (generateMoves empty used)
   where
     emptyIdx = V.takeWhile (\x -> x < fst (V.last used)) $ V.elemIndices Nothing disk
     viable =
-      if not shoulDefrag
-        then Just (V.toList emptyIdx)
-        else
+      case moveKind of
+        Single -> Just (V.toList emptyIdx)
+        Whole ->
           find (\x -> length x >= length used) $
             splitWhen (\a b -> b - a > 1) $
               V.toList emptyIdx
@@ -34,7 +36,7 @@ tryMove shoulDefrag disk used = case viable of
               V.map (\(i, _) -> (i, Nothing :: Maybe Int)) used'
             ]
 
-solve :: Bool -> Disk -> Disk
+solve :: Move -> Disk -> Disk
 solve shoulDefrag disk = foldl' (tryMove shoulDefrag) disk moveableSpace
   where
     moveableSpace = V.groupBy (\(_, a) (_, b) -> a == b) $ V.reverse $ V.filter (isJust . snd) $ V.indexed disk
@@ -43,7 +45,7 @@ checksum :: Disk -> Int
 checksum disk = V.sum $ V.catMaybes $ V.imap (\i x -> (* i) <$> x) disk
 
 part1 :: String -> String
-part1 = show . checksum . solve False . parse
+part1 = show . checksum . solve Single . parse
 
 part2 :: String -> String
-part2 = show . checksum . solve True . parse
+part2 = show . checksum . solve Whole . parse
