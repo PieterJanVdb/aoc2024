@@ -8,6 +8,7 @@ import Day5
 import Day6
 import Day7
 import Day8
+import Day9
 import System.Environment
 
 main :: IO ()
@@ -40,4 +41,6 @@ run = do
     (7, 2) -> return (Right (Day7.part2 $ lines input))
     (8, 1) -> return (Right (Day8.part1 $ lines input))
     (8, 2) -> return (Right (Day8.part2 $ lines input))
+    (9, 1) -> return (Right (Day9.part1 input))
+    (9, 2) -> return (Right (Day9.part2 input))
     _ -> return (Left "Not yet implemented")
