@@ -1,7 +1,7 @@
 module Day9 (part1, part2) where
 
 import Data.Char (digitToInt)
-import Data.List (foldl')
+import Data.List (find, foldl')
 import Data.Maybe (isJust)
 import Data.Vector (Vector)
 import Data.Vector qualified as V
@@ -15,18 +15,23 @@ parse = V.concat . V.toList . V.imap toBlocks . V.fromList . filter (/= '\n')
     toBlocks i c = V.replicate (digitToInt c) (if even i then Just (i `div` 2) else Nothing)
 
 tryMove :: Bool -> Disk -> Vector (Int, Maybe Int) -> Disk
-tryMove shoulDefrag disk blocks = case viable of
+tryMove shoulDefrag disk used = case viable of
   Nothing -> disk
-  Just empty -> V.update disk (move empty blocks)
+  Just empty -> V.update disk (generateMoves empty used)
   where
-    freeSpaceIdx = V.takeWhile (\x -> x < fst (V.last blocks)) $ V.elemIndices Nothing disk
-    ranges = V.fromList $ splitWhen (\a b -> shoulDefrag && (b - a > 1)) $ V.toList freeSpaceIdx
-    viable = if shoulDefrag then V.find (\x -> length x >= length blocks) ranges else Just (V.head ranges)
-    move empty blocks =
-      let blocks' = V.take (length empty) blocks
+    emptyIdx = V.takeWhile (\x -> x < fst (V.last used)) $ V.elemIndices Nothing disk
+    viable =
+      if not shoulDefrag
+        then Just (V.toList emptyIdx)
+        else
+          find (\x -> length x >= length used) $
+            splitWhen (\a b -> b - a > 1) $
+              V.toList emptyIdx
+    generateMoves empty used =
+      let used' = V.take (length empty) used
        in V.concat
-            [ V.zip (V.fromList empty) (V.map snd blocks'),
-              V.map (\(i, _) -> (i, Nothing :: Maybe Int)) blocks'
+            [ V.zip (V.fromList empty) (V.map snd used'),
+              V.map (\(i, _) -> (i, Nothing :: Maybe Int)) used'
             ]
 
 solve :: Bool -> Disk -> Disk
