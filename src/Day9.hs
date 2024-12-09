@@ -39,7 +39,11 @@ tryMove moveKind disk used = case viable of
 solve :: Move -> Disk -> Disk
 solve shoulDefrag disk = foldl' (tryMove shoulDefrag) disk moveableSpace
   where
-    moveableSpace = V.groupBy (\(_, a) (_, b) -> a == b) $ V.reverse $ V.filter (isJust . snd) $ V.indexed disk
+    moveableSpace =
+      V.groupBy (\(_, a) (_, b) -> a == b) $
+        V.reverse $
+          V.filter (isJust . snd) $
+            V.indexed disk
 
 checksum :: Disk -> Int
 checksum disk = V.sum $ V.catMaybes $ V.imap (\i x -> (* i) <$> x) disk
