@@ -1,6 +1,7 @@
 module Main where
 
 import Day1
+import Day10
 import Day2
 import Day3
 import Day4
@@ -43,4 +44,6 @@ run = do
     (8, 2) -> return (Right (Day8.part2 $ lines input))
     (9, 1) -> return (Right (Day9.part1 input))
     (9, 2) -> return (Right (Day9.part2 input))
+    (10, 1) -> return (Right (Day10.part1 $ lines input))
+    (10, 2) -> return (Right (Day10.part2 $ lines input))
     _ -> return (Left "Not yet implemented")

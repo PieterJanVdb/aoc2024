@@ -28,6 +28,7 @@ library
         Day7
         Day8
         Day9
+        Day10
     other-modules:
         Utils.String
         Utils.Lists
