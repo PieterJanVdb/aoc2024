@@ -1,12 +1,11 @@
 module Day12 (part1, part2) where
 
-import Data.List (find, foldl', nub, partition)
+import Data.List (foldl', partition)
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as M
-import Data.Maybe (isNothing, mapMaybe)
+import Data.Maybe (mapMaybe)
 import Data.Set (Set)
 import Data.Set qualified as S
-import Debug.Trace (trace)
 import Utils.Grid (Coord, Grid, makeGrid)
 
 type Plot = (Int, [Coord])
