@@ -20,7 +20,7 @@ type Garden = Grid Char
 
 data Corner = Outside | Inside (Set Coord) deriving (Eq, Ord, Show)
 
-data Direction = NW | NE | SW | SE deriving (Show, Enum)
+data CornerDirection = NW | NE | SW | SE deriving (Show, Enum)
 
 getPlot :: Garden -> Set Coord -> Set Coord -> Plot
 getPlot garden nodes visited =
@@ -34,16 +34,16 @@ getPlot garden nodes visited =
       ]
     getPerimeter neighbours = 4 - length neighbours
     getCorner garden (r, c) dir
-      | p /= h && p /= v = 1
-      | p == h && p == v && p /= d = 1
+      | p /= garden M.!? h && p /= garden M.!? v = 1
+      | p == garden M.!? h && p == garden M.!? v && p /= garden M.!? d = 1
       | otherwise = 0
       where
         p = garden M.!? (r, c)
         (h, v, d) = case dir of
-          NW -> (garden M.!? (r, c - 1), garden M.!? (r - 1, c), garden M.!? (r - 1, c - 1))
-          NE -> (garden M.!? (r, c + 1), garden M.!? (r - 1, c), garden M.!? (r - 1, c + 1))
-          SW -> (garden M.!? (r, c - 1), garden M.!? (r + 1, c), garden M.!? (r + 1, c - 1))
-          SE -> (garden M.!? (r, c + 1), garden M.!? (r + 1, c), garden M.!? (r + 1, c + 1))
+          NW -> ((r, c - 1), (r - 1, c), (r - 1, c - 1))
+          NE -> ((r, c + 1), (r - 1, c), (r - 1, c + 1))
+          SW -> ((r, c - 1), (r + 1, c), (r + 1, c - 1))
+          SE -> ((r, c + 1), (r + 1, c), (r + 1, c + 1))
     getCorners n = foldl' (\c dir -> c + getCorner garden n dir) 0 (enumFrom NW)
     toVisit = S.fromList (concatMap getNeighbours (S.toList nodes)) S.\\ visited
     plot = mconcat $ map (\n -> Plot (getPerimeter . getNeighbours $ n) (getCorners n) [n]) (S.toList nodes)
