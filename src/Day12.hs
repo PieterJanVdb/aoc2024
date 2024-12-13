@@ -8,16 +8,24 @@ import Data.Set (Set)
 import Data.Set qualified as S
 import Utils.Grid (Coord, Grid, makeGrid)
 
-type Plot = (Int, [Coord])
+data Plot = Plot Int Int [Coord]
+
+instance Semigroup Plot where
+  (Plot perimeters corners plants) <> (Plot perimeters' corners' plants') =
+    Plot (perimeters + perimeters') (corners + corners') (plants ++ plants')
+
+instance Monoid Plot where mempty = Plot 0 0 []
 
 type Garden = Grid Char
 
 data Corner = Outside | Inside (Set Coord) deriving (Eq, Ord, Show)
 
-getPlot :: Garden -> Set Coord -> Set Coord -> [(Int, Coord)]
+data Direction = NW | NE | SW | SE deriving (Show, Enum)
+
+getPlot :: Garden -> Set Coord -> Set Coord -> Plot
 getPlot garden nodes visited =
-  nodesWithPerimeters
-    ++ (if null toVisit then [] else getPlot garden toVisit (S.union nodes visited))
+  plot
+    <> if null toVisit then mempty else getPlot garden toVisit (S.union nodes visited)
   where
     getNeighbours node@(r, c) =
       [ n
@@ -25,57 +33,41 @@ getPlot garden nodes visited =
           M.lookup node garden == M.lookup n garden
       ]
     getPerimeter neighbours = 4 - length neighbours
+    getCorner garden (r, c) dir
+      | p /= h && p /= v = 1
+      | p == h && p == v && p /= d = 1
+      | otherwise = 0
+      where
+        p = garden M.!? (r, c)
+        (h, v, d) = case dir of
+          NW -> (garden M.!? (r, c - 1), garden M.!? (r - 1, c), garden M.!? (r - 1, c - 1))
+          NE -> (garden M.!? (r, c + 1), garden M.!? (r - 1, c), garden M.!? (r - 1, c + 1))
+          SW -> (garden M.!? (r, c - 1), garden M.!? (r + 1, c), garden M.!? (r + 1, c - 1))
+          SE -> (garden M.!? (r, c + 1), garden M.!? (r + 1, c), garden M.!? (r + 1, c + 1))
+    getCorners n = foldl' (\c dir -> c + getCorner garden n dir) 0 (enumFrom NW)
     toVisit = S.fromList (concatMap getNeighbours (S.toList nodes)) S.\\ visited
-    nodesWithPerimeters = map (\n -> (getPerimeter . getNeighbours $ n, n)) (S.toList nodes)
+    plot = mconcat $ map (\n -> Plot (getPerimeter . getNeighbours $ n) (getCorners n) [n]) (S.toList nodes)
 
 getPlots :: Garden -> [Plot]
 getPlots garden =
-  map (foldl' (\(n, plants) (n', plant) -> (n + n', plant : plants)) (0, [])) $
-    snd $
-      M.foldlWithKey'
-        ( \(seen, plots) coord _ ->
-            if S.member coord seen
-              then (seen, plots)
-              else
-                let p = getPlot garden (S.singleton coord) S.empty
-                 in (S.union seen (S.fromList $ map snd p), p : plots)
-        )
-        (S.empty, [])
-        garden
-
-getCorner :: [Coord] -> Coord -> (Int -> Int -> Int, Int -> Int -> Int) -> Maybe Corner
-getCorner plot p@(r, c) (hOp, vOp)
-  | not hasH && not hasV = Just Outside
-  | not hasH && hasV =
-      if hasD
-        then Just (Inside (S.fromList [p, v, d]))
-        else Nothing
-  | hasH && not hasV =
-      if hasD
-        then Just (Inside (S.fromList [p, h, d]))
-        else Nothing
-  | hasH && hasV && not hasD = Just (Inside (S.fromList [p, h, v]))
-  | otherwise = Nothing
-  where
-    h = (r, c `hOp` 1)
-    v = (r `vOp` 1, c)
-    d = (r `vOp` 1, c `hOp` 1)
-    hasH = h `elem` plot
-    hasV = v `elem` plot
-    hasD = d `elem` plot
-
-getCorners :: [Coord] -> Int
-getCorners plot = length outside + length (S.fromList inside)
-  where
-    allOps = [((-), (-)), ((-), (+)), ((+), (-)), ((+), (+))]
-    corners = concatMap (\p -> mapMaybe (getCorner plot p) allOps) plot
-    (outside, inside) = partition (== Outside) corners
-
-getPrice :: [Plot] -> Int
-getPrice plots = sum $ map (\(n, coords) -> n * length coords) plots
+  snd $
+    M.foldlWithKey'
+      ( \(seen, plots) coord _ ->
+          if S.member coord seen
+            then (seen, plots)
+            else
+              let p@(Plot _ _ coords) = getPlot garden (S.singleton coord) S.empty
+               in (S.union seen (S.fromList coords), p : plots)
+      )
+      (S.empty, [])
+      garden
 
 part1 :: [String] -> String
 part1 = show . getPrice . getPlots . makeGrid
+  where
+    getPrice = sum . map (\(Plot perim _ coords) -> perim * length coords)
 
 part2 :: [String] -> String
-part2 = show . getPrice . map (\(_, plot) -> (getCorners plot, plot)) . getPlots . makeGrid
+part2 = show . getPrice . getPlots . makeGrid
+  where
+    getPrice = sum . map (\(Plot _ corners coords) -> corners * length coords)
