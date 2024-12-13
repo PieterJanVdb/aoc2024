@@ -5,7 +5,7 @@ import Text.Parsec (choice, endOfLine, eof, many1, parse, try)
 import Text.Parsec.Char (anyChar, char, digit, string)
 import Text.Parsec.String (Parser)
 
-data Instruction = Multiply Int Int | Enable | Disable deriving (Show)
+data Instruction = Multiply Int Int | Enable | Disable
 
 mult :: Parser Instruction
 mult =
