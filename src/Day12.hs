@@ -14,7 +14,7 @@ instance Semigroup Plot where
   (Plot perimeters corners plants) <> (Plot perimeters' corners' plants') =
     Plot (perimeters + perimeters') (corners + corners') (plants ++ plants')
 
-instance Monoid Plot where mempty = Plot 0 0 []
+instance Monoid Plot where mempty = Plot 0 0 mempty
 
 type Garden = Grid Char
 
