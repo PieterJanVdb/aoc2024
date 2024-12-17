@@ -1,12 +1,15 @@
-module Utils.Lists (occurrences, pairs, splitWhen, (!?)) where
+module Utils.Lists (occurrences, pairs, splitWhen, chunks, (!?)) where
 
-import Data.List (tails)
+import Data.List (tails, unfoldr)
 
 occurrences :: (Eq a) => a -> [a] -> Int
 occurrences x = length . filter (x ==)
 
 pairs :: [a] -> [(a, a)]
 pairs l = [(x, y) | (x : ys) <- tails l, y <- ys]
+
+chunks :: Int -> [a] -> [[a]]
+chunks n = takeWhile (not . null) . unfoldr (Just . splitAt n)
 
 splitWhen :: (a -> a -> Bool) -> [a] -> [[a]]
 splitWhen f = foldr go [[]]
