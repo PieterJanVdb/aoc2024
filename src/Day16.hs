@@ -31,11 +31,12 @@ findSeatsAndScore grid = go grid initQueue M.empty [] maxBound
       Just ((path@(p : ps), dir, score), queue') ->
         case grid M.! p of
           'E' | score > minScore -> Just (minScore, length $ S.fromList $ concat paths)
-          'E' -> go grid queue' seen (path : paths) score
-          _ | stop -> go grid queue' seen paths minScore
+          'E' | skip -> go grid queue' seen (path : paths) score
+          'E' -> go grid (toProcess ++ queue') seen' (path : paths) score
+          _ | skip -> go grid queue' seen paths minScore
           _ -> go grid (toProcess ++ queue') seen' paths minScore
         where
-          stop = maybe False (< score) (M.lookup (p, dir) seen)
+          skip = maybe False (< score) (M.lookup (p, dir) seen)
           seen' = M.alter (Just . const score) (p, dir) seen
           toProcess =
             catMaybes
