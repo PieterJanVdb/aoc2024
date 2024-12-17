@@ -1,58 +1,72 @@
 module Day16 (part1, part2) where
 
-import Data.List (elemIndex, foldl', sortBy)
-import Data.Map.Strict (Map)
+import Data.HashMap.Strict (HashMap)
+import Data.HashMap.Strict qualified as HM
+import Data.HashSet (HashSet)
+import Data.HashSet qualified as HS
+import Data.List (sortBy)
 import Data.Map.Strict qualified as M
-import Data.Maybe (catMaybes, isJust, isNothing, listToMaybe, mapMaybe)
+import Data.Maybe (catMaybes)
+import Data.Set (Set)
 import Data.Set qualified as S
-import Debug.Trace (trace)
-import Utils.Grid (Coord, Direction (..), Grid, makeGrid, neighbour)
+import Utils.Grid (Coord, Direction (..), Grid, makeGrid, neighbour, turnLeft, turnRight)
 
-type Path = [Coord]
+data State = State
+  { distanceMap :: HashMap (Coord, Direction) Int,
+    queue :: Set (Int, [Coord], Direction),
+    seats :: HashSet Coord,
+    minScore :: Int
+  }
 
-type Queue = [(Path, Direction, Int)]
-
-type Seen = Map (Coord, Direction) Int
-
-findSeatsAndScore :: Grid Char -> Maybe (Int, Int)
-findSeatsAndScore grid = go grid initQueue M.empty [] maxBound
+solve :: Grid Char -> Maybe (Int, Int)
+solve grid = processQueue initialState
   where
     (start, _) = M.findMax $ M.filter (== 'S') grid
-    initQueue = [([start], E, 0)]
+    (end, _) = M.findMax $ M.filter (== 'E') grid
 
-    pop :: Queue -> Maybe ((Path, Direction, Int), [(Path, Direction, Int)])
-    pop queue = case sortBy (\(_, _, a) (_, _, b) -> compare a b) queue of
-      [] -> Nothing
-      (x : xs) -> Just (x, xs)
+    initialDistances = HM.singleton (start, E) 0
+    initialQueue = S.singleton (0, [start], E)
+    initialMinScore = maxBound
+    initialSeats = HS.empty
+    initialState = State initialDistances initialQueue initialSeats initialMinScore
 
-    go :: Grid Char -> Queue -> Seen -> [Path] -> Int -> Maybe (Int, Int)
-    go grid queue seen paths minScore = case pop queue of
+    processQueue state@(State d0 q0 s0 minScore) = case S.minView q0 of
       Nothing -> Nothing
-      Just ((path@(p : ps), dir, score), queue') ->
-        case grid M.! p of
-          'E' | score > minScore -> Just (minScore, length $ S.fromList $ concat paths)
-          'E' | skip -> go grid queue' seen (path : paths) score
-          'E' -> go grid (toProcess ++ queue') seen' (path : paths) score
-          _ | skip -> go grid queue' seen paths minScore
-          _ -> go grid (toProcess ++ queue') seen' paths minScore
-        where
-          skip = maybe False (< score) (M.lookup (p, dir) seen)
-          seen' = M.alter (Just . const score) (p, dir) seen
-          toProcess =
-            catMaybes
-              [ (neighbour p dir : path, dir, score + 1) <$ M.lookup (neighbour p dir) grid,
-                Just (path, turnLeft dir, score + 1000),
-                Just (path, turnRight dir, score + 1000)
-              ]
-          turnLeft = \case N -> W; E -> N; S -> E; W -> S
-          turnRight = \case N -> E; E -> S; S -> W; W -> N
+      Just ((score, path@(p : ps), dir), q1) ->
+        if p == end
+          then
+            if score > minScore
+              then Just (minScore, length s0)
+              else
+                let s1 = HS.union s0 (HS.fromList path)
+                 in processQueue (state {queue = q1, seats = s1, minScore = score})
+          else
+            let neighbours = getNeighbours p dir score
+             in processQueue $ foldl (foldNeighbour (path, dir)) (State d0 q1 s0 minScore) neighbours
+
+    foldNeighbour (path@(current : _), from) state@(State d0 q1 s0 minScore) (neighbour, cost, to) =
+      let altDistance = d0 HM.! (current, from) + cost
+          neighbourDistance = HM.lookup (neighbour, to) d0
+       in if maybe True (\x -> altDistance <= x - 2000 || altDistance - 2000 <= x) neighbourDistance
+            then State (HM.insert (neighbour, to) altDistance d0) (S.insert (altDistance, neighbour : path, to) q1) s0 minScore
+            else state
+
+    getNeighbours current dir score =
+      let straight = neighbour current dir
+          left = neighbour current (turnLeft dir)
+          right = neighbour current (turnRight dir)
+       in catMaybes
+            [ (straight, 1, dir) <$ M.lookup straight grid,
+              (left, 1001, turnLeft dir) <$ M.lookup left grid,
+              (right, 1001, turnRight dir) <$ M.lookup right grid
+            ]
 
 part1 :: [String] -> String
-part1 input = maybe "No paths could be found" (show . fst) (findSeatsAndScore grid)
+part1 input = maybe "No paths could be found" (show . fst) (solve grid)
   where
     grid = M.filter (/= '#') $ makeGrid input
 
 part2 :: [String] -> String
-part2 input = maybe "No paths could be found" (show . snd) (findSeatsAndScore grid)
+part2 input = maybe "No paths could be found" (show . snd) (solve grid)
   where
     grid = M.filter (/= '#') $ makeGrid input

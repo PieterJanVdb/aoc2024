@@ -11,7 +11,6 @@ common extensions
         LambdaCase
         NoFieldSelectors
         OverloadedRecordDot
-        OverloadedRecordUpdate
         OverloadedStrings
 common warnings
     ghc-options: -Wall
@@ -43,6 +42,8 @@ library
     build-depends:
         base,
         containers,
+        unordered-containers,
+        hashable,
         text,
         parsec,
         binary,
