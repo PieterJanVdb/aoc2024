@@ -7,6 +7,7 @@ module Utils.Grid
     invertGrid,
     invertGridWithFilter,
     neighbour,
+    neighbours,
     turnLeft,
     turnRight,
   )
@@ -45,6 +46,9 @@ invertGrid = invertGridWithFilter (const True)
 
 neighbour :: Coord -> Direction -> Coord
 neighbour (r, c) = \case N -> (r - 1, c); E -> (r, c + 1); S -> (r + 1, c); W -> (r, c - 1)
+
+neighbours :: Coord -> [Coord]
+neighbours c = map (neighbour c) (enumFrom N)
 
 turnLeft :: Direction -> Direction
 turnLeft = \case N -> W; E -> N; S -> E; W -> S
