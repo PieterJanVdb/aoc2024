@@ -36,6 +36,7 @@ library
         Day16
         Day17
         Day18
+        Day19
     other-modules:
         Utils.String
         Utils.Lists
@@ -50,7 +51,8 @@ library
         parsec,
         binary,
         bytestring,
-        vector
+        vector,
+        mtl
     default-language: GHC2021
 
 executable aoc2024
