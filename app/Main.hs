@@ -12,6 +12,7 @@ import Day17
 import Day18
 import Day19
 import Day2
+import Day20
 import Day3
 import Day4
 import Day5
@@ -73,4 +74,6 @@ run = do
     (18, 2) -> return (Right (Day18.part2 $ lines input))
     (19, 1) -> return (Right (Day19.part1 input))
     (19, 2) -> return (Right (Day19.part2 input))
+    (20, 1) -> return (Right (Day20.part1 $ lines input))
+    (20, 2) -> return (Right (Day20.part2 $ lines input))
     _ -> return (Left "Not yet implemented")
