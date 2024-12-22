@@ -10,6 +10,7 @@ common extensions
     default-extensions:
         LambdaCase
         NoFieldSelectors
+        PolyKinds
         OverloadedRecordDot
         OverloadedStrings
 common warnings

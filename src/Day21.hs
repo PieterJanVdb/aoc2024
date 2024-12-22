@@ -1,10 +1,11 @@
 module Day21 (part1, part2) where
 
+import Data.Bifunctor (second)
 import Data.HashMap.Strict (HashMap)
 import Data.HashMap.Strict qualified as HM
 import Data.HashSet (HashSet)
 import Data.HashSet qualified as HS
-import Data.List (dropWhileEnd, find, foldl', intercalate, isSubsequenceOf, nub)
+import Data.List (dropWhileEnd, find, foldl', group, intercalate, isSubsequenceOf, nub)
 import Data.Map.Strict qualified as M
 import Data.Maybe (catMaybes, mapMaybe)
 import Data.Sequence (Seq (..), (|>))
@@ -15,7 +16,17 @@ import Debug.Trace (trace)
 import Utils.Grid (Coord, Direction (..), Grid, makeGrid, neighbours, turnLeft, turnRight)
 import Utils.String (toInt)
 
-type Cache = HashMap (Coord, Coord) [String]
+type Cache = HashMap (Coord, Coord) String
+
+type FreqCount = HashMap (Coord, Coord) Int
+
+data State = State
+  { cache :: Cache,
+    freq :: FreqCount,
+    grid :: Grid Char,
+    paths :: [[Coord]]
+  }
+  deriving (Show)
 
 ex = ["029A", "980A", "179A", "456A", "379A"]
 
@@ -46,10 +57,14 @@ toKey (x1, y1) (x2, y2) = case (x1 - x2, y1 - y2) of
   (1, 0) -> '^'
   (-1, 0) -> 'v'
 
-extrapolate :: Coord -> Coord -> [[Coord]] -> [String]
-extrapolate from to allPaths = nub shortest
+toCoord :: Grid Char -> Char -> Coord
+toCoord pad ch = fst $ M.findMax $ M.filter (== ch) pad
+
+extrapolate :: Coord -> Coord -> [[Coord]] -> String
+extrapolate from to allPaths = final
   where
-    shortest = filter (\p -> length p == max) paths
+    final = snd $ minimum (map (\p -> (length . group $ p, p)) shortest)
+    shortest = nub $ filter (\p -> length p == max) paths
     max = minimum (map length paths)
     extract a b = dropWhileEnd (/= b) . dropWhile (/= a)
     pathToSeq p = zipWith toKey p (drop 1 p)
@@ -58,51 +73,50 @@ extrapolate from to allPaths = nub shortest
        in find (not . null) ps
     paths = mapMaybe findPath allPaths
 
-extrapolateAll :: Cache -> Grid Char -> String -> Coord -> [[Coord]] -> (Cache, [String])
-extrapolateAll cache grid seq root allPaths =
-  (\(cache', _, s) -> (cache', map moveA s)) $
-    foldl' foldChar (cache, root, [[]]) seq
+codeToFreq :: Grid Char -> Grid Char -> String -> Coord -> [[Coord]] -> FreqCount
+codeToFreq numpad dirpad code root allPaths = snd $ foldl' foldChar (root, HM.empty) code
   where
-    moveA seq = drop 1 seq <> "A"
-    toCoord ch = fst $ M.findMax $ M.filter (== ch) grid
-    combine l r = [x <> "A" <> y | x <- l, y <- r]
-    foldChar (cache', from, seqs) ch =
-      let to = toCoord ch
-       in if from == to
-            then (cache', from, combine seqs [[]])
-            else case HM.lookup (from, to) cache' of
-              Just seqs' -> (cache', to, combine seqs seqs')
-              Nothing ->
-                let seqs' = extrapolate from to allPaths
-                 in (HM.insert (from, to) seqs' cache', to, combine seqs (extrapolate from to allPaths))
+    foldChar (from, freq) ch =
+      let to = toCoord numpad ch
+          seq = extrapolate from to allPaths
+          incr fq x y = HM.alter (maybe (Just 1) (Just . (+ 1))) (toCoord dirpad x, toCoord dirpad y) fq
+       in (to, foldl' (\fq (x, y) -> incr fq x y) freq (zip ('A' : seq) (seq ++ "A")))
 
--- 0         2         9        A
--- <    A    ^  A  >  ^^   A  vvv   A
---
---
--- v<<A>>^A<A>Av
---   v  <<    A  >>   ^  A    <    A  >  A   v       A <^AA >A <vAAA >^A
--- <vA <AA >>^A vAA <^A >A <v<A >>^A vA ^A <vA     >^A <v<A>^A>AAvA^A<v<A>A>^AAAvA<^A>A
-part1 :: [String] -> String
-part1 input = show $ sum scores
+extrapolateAll :: State -> Coord -> State
+extrapolateAll state@(State {cache, freq, grid, paths}) root = HM.foldlWithKey' foldFreq state {freq = HM.empty} freq
   where
+    foldFreq state@(State {cache, freq}) (from, to) count =
+      let incr freq seq =
+            foldl'
+              (\fq (x, y) -> HM.alter (maybe (Just count) (Just . (+ count))) (toCoord dirpad x, toCoord dirpad y) fq)
+              freq
+              (if seq == "A" then [('A', 'A')] else zip ('A' : seq) (seq ++ "A"))
+       in case HM.lookup (from, to) cache of
+            Just seq -> state {cache, freq = incr freq seq}
+            Nothing ->
+              let seq = if from == to then "A" else extrapolate from to paths
+               in state {cache = HM.insert (from, to) seq cache, freq = incr freq seq}
+
+part1 :: [String] -> String
+part1 input = show $ sum $ map (\(c, s) -> toInt c * toSequenceLen s) statePerCode
+  where
+    toDirs ((x, y), n) = ((dirpad M.! x, dirpad M.! y), n)
     (rootN, _) = M.findMax $ M.filter (== 'A') numpad
     (rootD, _) = M.findMax $ M.filter (== 'A') dirpad
     (targetD, _) = M.findMax $ M.filter (== '<') dirpad
     numPaths = allPathsToRoot numpad 10 rootN
     dirPaths = allPathsToRoot dirpad 6 rootD
-    keysPerCode = map (\c -> (c, extrapolateAll HM.empty numpad c rootN numPaths)) input
-    foldSeq (cache, seqs) seq =
-      let (cache', seqs') = extrapolateAll cache dirpad seq rootD dirPaths
-       in (cache', seqs ++ seqs')
-    seqsPerCode =
+    initialFreqsPerCode = map (\c -> (c, codeToFreq numpad dirpad c rootN numPaths)) input
+    initialStates =
+      map
+        (\(c, freq) -> (c, (State {freq, cache = HM.empty, grid = dirpad, paths = dirPaths})))
+        initialFreqsPerCode
+    statePerCode =
       iterate
-        (map (\(c, (cache, seqs)) -> (c, foldl' foldSeq (cache, []) seqs)))
-        (map (\(c, (_, seqs)) -> (c, (HM.empty, seqs))) keysPerCode)
-        !! 25
-
-    shortest = map (\(c, (_, seqs)) -> (c, minimum . map length $ seqs)) seqsPerCode
-    scores = map (\(c, seq) -> toInt (init c) * seq) shortest
+        (map (\(c, state) -> (c, extrapolateAll state rootD)))
+        initialStates
+        !! 2
+    toSequenceLen (State {cache, freq}) = sum $ map snd $ HM.toList freq
 
 part2 :: [String] -> String
 part2 input = undefined
